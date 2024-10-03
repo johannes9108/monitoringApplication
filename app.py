@@ -1,9 +1,10 @@
 # Monitoring Application for the course Systemutveckling i Python
 
 # Read Menu options from a file
-import os, psutil
+import os, psutil, time, math, threading
 
 global_monitoring = False
+background_thread_running = False
 menu_options = []
 alarms = {
         "cpu_alarms": [],
@@ -29,7 +30,6 @@ def display_menu():
         print(f"{i+1} {menu_options[i]}")
     print(f"{len(menu_options)+1} Exit\n")
 def convertBytesToGB(bytes):
-    import math
     return math.ceil(bytes/10**9)
 def valid_threshold(threshold, min=1, max=100):
     if threshold < min or threshold > max:
@@ -39,11 +39,15 @@ def valid_threshold(threshold, min=1, max=100):
 def displayStartFrame(title):
     os.system('cls' if os.name == 'nt' else 'clear')
     print(f"{title}\n{'-'*len(title)}",end="\n\n")
-def displayEndFrame():
-    import time
+def displayEndFrame(stop=False):
     time.sleep(1)
-    input("Press Enter to continue...")
-    os.system('cls' if os.name == 'nt' else 'clear')
+    if stop == True:
+        input("Press Enter to continue...")
+        os.system('cls' if os.name == 'nt' else 'clear')
+def list_active_monitoring_wrapper():
+    while background_thread_running:
+        time.sleep(2)
+        list_active_monitoring()
 
 
 ## Monitoring Functions
@@ -52,7 +56,7 @@ def start_monitoring():
     global_monitoring = True
     print(f"Monitoring started",end="\n\n")
     displayEndFrame()
-def list_active_monitoring():
+def list_active_monitoring(stop=False):
     if global_monitoring == False:
         print("No monitoring is active",end="\n\n")
     else:
@@ -63,8 +67,9 @@ def list_active_monitoring():
         disk_usage_percent = psutil.disk_usage('/').percent
         disk_usage = convertBytesToGB(psutil.disk_usage('/').used)
         disk_total = convertBytesToGB(psutil.disk_usage('/').total)
+        
         print(f"CPU Usage: {cpu_usage_percent}%", f"Memory Usage: {mem_usage_percent}% ({mem_usage} GB out of {mem_total} used)", f"Disk Usage: {disk_usage_percent}% ({disk_usage} GB out of {disk_total} used)", sep="\n",end="\n\n")
-        displayEndFrame()
+        displayEndFrame(stop)
 def create_alarm():
     while True:
         displayStartFrame("Create alarm")
@@ -124,26 +129,37 @@ def display_alarms():
         print(f"Disk Alarm {i+1}: {alarms['disk_alarms'][i]}%")    
     displayEndFrame()
 def start_monitoring_mode():
-    print("Start monitoring mode")
-while True:
-    display_menu()
-    try: 
-        choice = int(input("Enter choice: "))
-        if choice == 1:
-            start_monitoring()
-        elif choice == 2:
-            list_active_monitoring()
-        elif choice == 3:
-            create_alarm()
-        elif choice == 4:
-            display_alarms()
-        elif choice == 5:
-            start_monitoring_mode()
-        elif choice == len(menu_options)+1:
-            print("Exit")
-            break
-        else:
+    global background_thread_running
+    background_thread_running = True
+    displayStartFrame("Monitoring Mode Activated")
+    continuous_monitoring_thread = threading.Thread(target=list_active_monitoring_wrapper, args=(), daemon=True)
+    continuous_monitoring_thread.start()
+    input("Press Enter to stop monitoring mode...\n")
+    background_thread_running = False
+    continuous_monitoring_thread.join()
+    displayEndFrame()
+    
+def main():
+    while True:
+        display_menu()
+        try: 
+            choice = int(input("Enter choice: "))
+            if choice == 1:
+                start_monitoring()
+            elif choice == 2:
+                list_active_monitoring(True)
+            elif choice == 3:
+                create_alarm()
+            elif choice == 4:
+                display_alarms()
+            elif choice == 5:
+                start_monitoring_mode()
+            elif choice == len(menu_options)+1:
+                print("Exit")
+                break
+            else:
+                print("Invalid choice")
+        except ValueError:
             print("Invalid choice")
-    except ValueError:
-        print("Invalid choice")
-        continue
+            continue
+main()
