@@ -1,0 +1,5 @@
+Starta övervakning
+Lista aktiv övervakning
+Skapa larm
+Visa larm
+Starta övervakningsläge
