@@ -1,5 +1,6 @@
-Starta övervakning
-Lista aktiv övervakning
-Skapa larm
-Visa larm
-Starta övervakningsläge
+Start Monitoring
+Display Active Monitoring
+Create Alarm
+Remove Alarm
+Display Alarms
+Start Monitoring Mode

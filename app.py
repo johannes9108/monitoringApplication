@@ -29,6 +29,7 @@ def display_menu():
     for i in range(len(menu_options)):
         print(f"{i+1} {menu_options[i]}")
     print(f"{len(menu_options)+1} Exit\n")
+    displayEndFrame()
 def convertBytesToGB(bytes):
     return math.ceil(bytes/10**9)
 def valid_threshold(threshold, min=1, max=100):
@@ -39,9 +40,9 @@ def valid_threshold(threshold, min=1, max=100):
 def displayStartFrame(title):
     os.system('cls' if os.name == 'nt' else 'clear')
     print(f"{title}\n{'-'*len(title)}",end="\n\n")
-def displayEndFrame(stop=False):
+def displayEndFrame(halt=False):
     time.sleep(1)
-    if stop == True:
+    if halt == True:
         input("Press Enter to continue...")
         os.system('cls' if os.name == 'nt' else 'clear')
 def list_active_monitoring_wrapper():
@@ -80,7 +81,7 @@ def start_monitoring():
     global_monitoring = True
     print(f"Monitoring started",end="\n\n")
     displayEndFrame()
-def list_active_monitoring(stop=False):
+def list_active_monitoring(halt=False):
     if global_monitoring == False:
         logger.info("No_monitoring_is_active")
         print("No monitoring is active",end="\n\n")
@@ -99,7 +100,7 @@ def list_active_monitoring(stop=False):
         
         print(f"CPU Usage: {cpu_usage_percent}%", f"Memory Usage: {mem_usage_percent}% ({mem_usage} GB out of {mem_total} used)", f"Disk Usage: {disk_usage_percent}% ({disk_usage} GB out of {disk_total} used)", sep="\n",end="\n\n")
         logger.info("CPU_Usage_%d%%_Memory_Usage_%d%%_Disk_Usage_%d%%", cpu_usage_percent, mem_usage_percent, disk_usage_percent)
-        displayEndFrame(stop)
+        displayEndFrame(halt)
 def create_alarm():
     while True:
         displayStartFrame("Create alarm")
@@ -141,7 +142,25 @@ def create_alarm():
         else:
             print("Invalid choice")
         displayEndFrame()
-def display_alarms():
+def remove_alarm():
+    displayStartFrame("Remove alarm")
+    display_alarms(True)
+    removable_candidate = int(input("Enter which alarm to remove: "))
+    cpu_alarms = len(alarms.get("cpu_alarms"))
+    memory_alarms = len(alarms.get("memory_alarms"))
+    disk_alarms = len(alarms.get("disk_alarms"))
+    if removable_candidate < 1 or removable_candidate > cpu_alarms + memory_alarms + disk_alarms:
+        print("Invalid choice")
+        return
+    elif removable_candidate <= cpu_alarms:
+        alarms["cpu_alarms"].remove(alarms["cpu_alarms"][removable_candidate-1])
+    elif removable_candidate <= cpu_alarms + memory_alarms:
+        alarms["memory_alarms"].remove(alarms["memory_alarms"][removable_candidate-cpu_alarms-1])
+    elif removable_candidate <= cpu_alarms + memory_alarms + disk_alarms:
+        alarms["disk_alarms"].remove(alarms["disk_alarms"][removable_candidate-cpu_alarms-memory_alarms-1])
+    print(f"Alarm {removable_candidate} removed")
+    time.sleep(1)
+def display_alarms(subMenu = False):
     alarms['cpu_alarms'].sort()
     alarms['memory_alarms'].sort()
     alarms['disk_alarms'].sort()
@@ -150,14 +169,15 @@ def display_alarms():
     print(totalAlarms)
     for i in range(len(alarms['cpu_alarms'])):
         count += 1
-        print(f"CPU Alarm {count}: {alarms['cpu_alarms'][i]}%")
+        print(f"{count}. CPU Alarm {alarms['cpu_alarms'][i]}%")
     for i in range(len(alarms['memory_alarms'])):
-        count += i
-        print(f"Memory Alarm {i+1}: {alarms['memory_alarms'][i]}%")
+        count += 1
+        print(f"{count}. Memory Alarm {alarms['memory_alarms'][i]}%")
     for i in range(len(alarms['disk_alarms'])):
-        count += i
-        print(f"Disk Alarm {i+1}: {alarms['disk_alarms'][i]}%")    
-    displayEndFrame()
+        count += 1
+        print(f"{count}. Disk Alarm {alarms['disk_alarms'][i]}%")
+    if not subMenu:
+        input("Press Enter to return to main menu...")
 def start_monitoring_mode():
     global background_thread_running
     background_thread_running = True
@@ -167,8 +187,7 @@ def start_monitoring_mode():
     input("Press Enter to stop monitoring mode...\n")
     background_thread_running = False
     continuous_monitoring_thread.join()
-    displayEndFrame()
-    
+        
 def main():
     init()
     while True:
@@ -182,8 +201,10 @@ def main():
             elif choice == 3:
                 create_alarm()
             elif choice == 4:
-                display_alarms()
+                remove_alarm()
             elif choice == 5:
+                display_alarms()
+            elif choice == 6:
                 start_monitoring_mode()
             elif choice == len(menu_options)+1:
                 print("Exit")
