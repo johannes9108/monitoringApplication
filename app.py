@@ -1,8 +1,9 @@
 # Monitoring Application for the course Systemutveckling i Python
 
 # Read Menu options from a file
-import os, psutil, time, math, threading
+import os, psutil, time, math, threading, logging
 
+logger = logging.getLogger(__name__)
 global_monitoring = False
 background_thread_running = False
 menu_options = []
@@ -14,6 +15,7 @@ alarms = {
 
 ## Utility Functions
 def read_menu_options():
+    logger.info("Reading_menu_options_from_file")
     global menu_options
     menu_options = []
     try:
@@ -22,10 +24,8 @@ def read_menu_options():
                 menu_options.append(line.strip())
     except FileNotFoundError:
         print("File not found")
-    return menu_options
 def display_menu():
     displayStartFrame("Monitoring Application")
-    menu_options = read_menu_options()
     for i in range(len(menu_options)):
         print(f"{i+1} {menu_options[i]}")
     print(f"{len(menu_options)+1} Exit\n")
@@ -62,14 +62,27 @@ def check_alarms(usage_percent,alarm_type_values,alarm_type):
     if alarm_triggered:
         print(f"Warning, Alarm triggered, {alarm_type} usage exceeds: {alarm_type_values[minValueIndex]}%")
 
+## Initialization Functions
+def init():
+    logging.basicConfig(level=logging.INFO, filename="logs/monitoring.log", 
+                        format="%(asctime)s_%(message)s", encoding="utf-8",
+                        datefmt='%d/%m/%Y_%H:%M')
+    logger.debug("Initializing Monitoring Application")
+    logger.debug("Setting up logger")
+    read_menu_options()
+    time.sleep(1)
+
+
 ## Monitoring Functions
 def start_monitoring():
+    logger.info("Monitoring_started")
     global global_monitoring
     global_monitoring = True
     print(f"Monitoring started",end="\n\n")
     displayEndFrame()
 def list_active_monitoring(stop=False):
     if global_monitoring == False:
+        logger.info("No_monitoring_is_active")
         print("No monitoring is active",end="\n\n")
     else:
         cpu_usage_percent = psutil.cpu_percent()
@@ -79,11 +92,13 @@ def list_active_monitoring(stop=False):
         disk_usage_percent = psutil.disk_usage('/').percent
         disk_usage = convertBytesToGB(psutil.disk_usage('/').used)
         disk_total = convertBytesToGB(psutil.disk_usage('/').total)
-        check_alarms(cpu_usage_percent,alarms["cpu_alarms"], "CPU")
-        check_alarms(mem_usage_percent,alarms["memory_alarms"],"Memory")
-        check_alarms(disk_usage_percent,alarms["disk_alarms"], "Disk")
+        if(background_thread_running):
+            check_alarms(cpu_usage_percent,alarms["cpu_alarms"], "CPU")
+            check_alarms(mem_usage_percent,alarms["memory_alarms"],"Memory")
+            check_alarms(disk_usage_percent,alarms["disk_alarms"], "Disk")
         
         print(f"CPU Usage: {cpu_usage_percent}%", f"Memory Usage: {mem_usage_percent}% ({mem_usage} GB out of {mem_total} used)", f"Disk Usage: {disk_usage_percent}% ({disk_usage} GB out of {disk_total} used)", sep="\n",end="\n\n")
+        logger.info("CPU_Usage_%d%%_Memory_Usage_%d%%_Disk_Usage_%d%%", cpu_usage_percent, mem_usage_percent, disk_usage_percent)
         displayEndFrame(stop)
 def create_alarm():
     while True:
@@ -155,6 +170,7 @@ def start_monitoring_mode():
     displayEndFrame()
     
 def main():
+    init()
     while True:
         display_menu()
         try: 
