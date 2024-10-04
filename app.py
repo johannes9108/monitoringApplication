@@ -1,7 +1,7 @@
 # Monitoring Application for the course Systemutveckling i Python
 
 # Read Menu options from a file
-import os, psutil, time, math, threading, logging
+import os, psutil, time, math, threading, logging,json
 
 logger = logging.getLogger(__name__)
 global_monitoring = False
@@ -62,7 +62,20 @@ def check_alarms(usage_percent,alarm_type_values,alarm_type):
                 # print(f"CPU Usage alarm: {cpu_usage_percent}%")
     if alarm_triggered:
         print(f"Warning, Alarm triggered, {alarm_type} usage exceeds: {alarm_type_values[minValueIndex]}%")
-
+def persist_alarm_data():
+    try:
+        with open("data/alarms.json", "w", encoding='UTF-8') as file:
+            file.write(json.dumps(alarms))
+            print(f"Alarms saved to alarms.json")
+    except FileNotFoundError:
+        print("File not found")
+def load_alarm_data():
+    try:
+        with open("data/alarms.json", "r", encoding='UTF-8') as file:
+            alarms = json.load(file)
+            print(f"loading previously configured alarms...")
+    except FileNotFoundError:
+        print("File not found")
 ## Initialization Functions
 def init():
     logging.basicConfig(level=logging.INFO, filename="logs/monitoring.log", 
@@ -71,6 +84,7 @@ def init():
     logger.debug("Initializing Monitoring Application")
     logger.debug("Setting up logger")
     read_menu_options()
+    load_alarm_data()
     time.sleep(1)
 
 
@@ -142,6 +156,7 @@ def create_alarm():
         else:
             print("Invalid choice")
         displayEndFrame()
+    persist_alarm_data()
 def remove_alarm():
     displayStartFrame("Remove alarm")
     display_alarms(True)
@@ -159,6 +174,7 @@ def remove_alarm():
     elif removable_candidate <= cpu_alarms + memory_alarms + disk_alarms:
         alarms["disk_alarms"].remove(alarms["disk_alarms"][removable_candidate-cpu_alarms-memory_alarms-1])
     print(f"Alarm {removable_candidate} removed")
+    persist_alarm_data()
     time.sleep(1)
 def display_alarms(subMenu = False):
     alarms['cpu_alarms'].sort()
