@@ -7,9 +7,9 @@ global_monitoring = False
 background_thread_running = False
 menu_options = []
 alarms = {
-        "cpu_alarms": [],
-        "memory_alarms": [],
-        "disk_alarms": []
+        "cpu_alarms": [1,2,3,4,10,20],
+        "memory_alarms": [5,15,20,70,72],
+        "disk_alarms": [20,30,35,40,60]
     }
 
 ## Utility Functions
@@ -48,7 +48,19 @@ def list_active_monitoring_wrapper():
     while background_thread_running:
         time.sleep(2)
         list_active_monitoring()
-
+def check_alarms(usage_percent,alarm_type_values,alarm_type):
+    minValue = 100
+    alarm_triggered = False
+    # absolute value of the difference between the current value and the alarm value
+    for index, alarm in enumerate(alarm_type_values):
+        if(usage_percent>=alarm):
+            alarm_triggered = True
+            if abs(usage_percent - alarm) <= minValue:
+                minValue = abs(usage_percent - alarm)
+                minValueIndex = index
+                # print(f"CPU Usage alarm: {cpu_usage_percent}%")
+    if alarm_triggered:
+        print(f"Warning, Alarm triggered, {alarm_type} usage exceeds: {alarm_type_values[minValueIndex]}%")
 
 ## Monitoring Functions
 def start_monitoring():
@@ -67,6 +79,9 @@ def list_active_monitoring(stop=False):
         disk_usage_percent = psutil.disk_usage('/').percent
         disk_usage = convertBytesToGB(psutil.disk_usage('/').used)
         disk_total = convertBytesToGB(psutil.disk_usage('/').total)
+        check_alarms(cpu_usage_percent,alarms["cpu_alarms"], "CPU")
+        check_alarms(mem_usage_percent,alarms["memory_alarms"],"Memory")
+        check_alarms(disk_usage_percent,alarms["disk_alarms"], "Disk")
         
         print(f"CPU Usage: {cpu_usage_percent}%", f"Memory Usage: {mem_usage_percent}% ({mem_usage} GB out of {mem_total} used)", f"Disk Usage: {disk_usage_percent}% ({disk_usage} GB out of {disk_total} used)", sep="\n",end="\n\n")
         displayEndFrame(stop)
