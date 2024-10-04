@@ -2,8 +2,9 @@
 
 # Read Menu options from a file
 import os, psutil, time, math, threading, logging,json
+from datetime import datetime
 
-logger = logging.getLogger(__name__)
+logger = None
 global_monitoring = False
 background_thread_running = False
 menu_options = []
@@ -78,10 +79,17 @@ def load_alarm_data():
         print("File not found")
 ## Initialization Functions
 def init():
-    logging.basicConfig(level=logging.INFO, filename="logs/monitoring.log", 
-                        format="%(asctime)s_%(message)s", encoding="utf-8",
-                        datefmt='%d/%m/%Y_%H:%M')
-    logger.debug("Initializing Monitoring Application")
+    global logger
+    logger = logging.getLogger(__name__)
+    # Root Logger Configuration
+    logging.basicConfig(level=logging.INFO, 
+                        encoding="utf-8"
+                        )
+    fileHandler = logging.FileHandler(datetime.now().strftime("logs/monitoring_%d_%m_%Y_%H.log"))
+    formatter = logging.Formatter('%(asctime)s_%(message)s',datefmt='%d/%m/%Y_%H:%M')
+    fileHandler.setFormatter(formatter)
+    logger.addHandler(fileHandler)
+    logger.info("Initializing Monitoring Application")
     logger.debug("Setting up logger")
     read_menu_options()
     load_alarm_data()
