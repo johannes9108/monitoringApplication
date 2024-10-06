@@ -1,20 +1,21 @@
-import logging, psutil, time, threading
-from ui import UI 
+import logging, psutil, time, threading,os
 
 class Monitoring:
     def __init__(self, logger, utils, fm):
         self.utils = utils
         self.fm = fm
-        self.ui = UI(logger, self)
         self.logger = logger
         self.global_monitoring = False
         self.background_thread_running = False
-        self.alarms = {"cpu_alarms":[],"memory_alarms":[],"disk_alarms":[]}
-        self.fm.load_alarm_data()
+        self.menu_options = fm.read_menu_options()
+        self.alarms = fm.load_alarm_data()
+        self.logger = logger
+        logger.info("Initializing Monitoring Application")
+        
     def start_monitoring(self):
         self.global_monitoring = True
         print("Monitoring started",end="\n\n")
-    
+        self.displayEndFrame()
     def check_alarms(self,usage_percent,alarm_type_values,alarm_type):
         minValue = 100
         alarm_triggered = False
@@ -46,15 +47,15 @@ class Monitoring:
                 self.check_alarms(disk_usage_percent,self.alarms["disk_alarms"], "Disk")
             
             print(f"CPU Usage: {cpu_usage_percent}%", f"Memory Usage: {mem_usage_percent}% ({mem_usage} GB out of {mem_total} used)", f"Disk Usage: {disk_usage_percent}% ({disk_usage} GB out of {disk_total} used)", sep="\n",end="\n\n")
-            self.logger.info("CPU_Usage_%d%%_Memory_Usage_%d%%_Disk_Usage_%d%%", cpu_usage_percent, mem_usage_percent, disk_usage_percent)
-            self.ui.displayEndFrame(halt)
+            self.logger.debug("CPU_Usage_%d%%_Memory_Usage_%d%%_Disk_Usage_%d%%", cpu_usage_percent, mem_usage_percent, disk_usage_percent)
+            self.displayEndFrame(halt)
     def list_active_monitoring_wrapper(self):
         while self.background_thread_running:
             time.sleep(2)
             self.list_active_monitoring()
     def create_alarm(self):
         while True:
-            self.ui.displayStartFrame("Create alarm")
+            self.displayStartFrame("Create alarm")
             print("1 CPU Usage")
             print("2 Memory Usage")
             print("3 Disk Usage")
@@ -92,10 +93,10 @@ class Monitoring:
                 break
             else:
                 print("Invalid choice")
-            self.ui.displayEndFrame()
+            self.displayEndFrame()
         self.fm.persist_alarm_data()
     def remove_alarm(self):
-        self.ui.displayStartFrame("Remove alarm")
+        self.displayStartFrame("Remove alarm")
         self.display_alarms(True)
         removable_candidate = int(input("Enter which alarm to remove: "))
         cpu_alarms = len(self.alarms.get("cpu_alarms"))
@@ -133,9 +134,48 @@ class Monitoring:
             input("Press Enter to return to main menu...")
     def start_monitoring_mode(self):
         self.background_thread_running = True
-        self.ui.displayStartFrame("Monitoring Mode Activated")
+        self.displayStartFrame("Monitoring Mode Activated")
         continuous_monitoring_thread = threading.Thread(target=self.list_active_monitoring_wrapper, args=(), daemon=True)
         continuous_monitoring_thread.start()
         input("Press Enter to stop monitoring mode...\n")
         self.background_thread_running = False
         continuous_monitoring_thread.join()
+        
+    def run(self):
+        self.menu_options = self.fm.read_menu_options()
+        while True:
+            self.display_menu()
+            try: 
+                choice = int(input("Enter choice: "))
+                if choice == 1:
+                    self.start_monitoring()
+                elif choice == 2:
+                    self.list_active_monitoring(True)
+                elif choice == 3:
+                    self.create_alarm()
+                elif choice == 4:
+                    self.remove_alarm()
+                elif choice == 5:
+                    self.display_alarms()
+                elif choice == 6:
+                    self.start_monitoring_mode()
+                elif choice == len(self.menu_options)+1:
+                    break
+                else:
+                    print("Invalid choice")
+            except ValueError:
+                print("Invalid choice")
+    def display_menu(self):
+        self.displayStartFrame("Monitoring Application")
+        for i in range(len(self.menu_options)):
+            print(f"{i+1} {self.menu_options[i]}")
+        print(f"{len(self.menu_options)+1} Exit\n")
+        self.displayEndFrame()
+    def displayStartFrame(self,title):
+        os.system('cls' if os.name == 'nt' else 'clear')
+        print(f"{title}\n{'-'*len(title)}",end="\n\n")
+    def displayEndFrame(self,halt=False):
+        time.sleep(1)
+        if halt == True:
+            input("Press Enter to continue...")
+            os.system('cls' if os.name == 'nt' else 'clear')

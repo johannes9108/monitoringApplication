@@ -1,7 +1,7 @@
 # Monitoring Application for the course Systemutveckling i Python
 
 # Read Menu options from a file
-import logging, filemanager, ui, utility, monitoring, time
+import logging, filemanager, utility, monitoring, time
 from datetime import datetime
 
 
@@ -11,7 +11,7 @@ app = None
 def init():
     logger = logging.getLogger(__name__)
     # Root Logger Configuration
-    logging.basicConfig(level=logging.DEBUG, 
+    logging.basicConfig(level=logging.info, 
                         encoding="utf-8"
                         )
     fileHandler = logging.FileHandler(datetime.now().strftime("logs/monitoring_%d_%m_%Y_%H.log"))
@@ -27,7 +27,7 @@ def init():
     
     global app
     monitor = monitoring.Monitoring(logger, utils, fm)
-    app = ui.UI(logger, monitor)
+    app = monitor
     time.sleep(1)
         
 def main():

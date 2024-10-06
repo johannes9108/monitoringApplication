@@ -9,7 +9,7 @@ class FileManager:
         # self.logger.info("Reading_menu_options_from_file")
         menu_options = []
         try:
-            with open("menu_options.txt", "r",encoding='UTF-8') as file:
+            with open("data/menu_options.txt", "r",encoding='UTF-8') as file:
                 for line in file:
                     menu_options.append(line.strip())
                 return menu_options
