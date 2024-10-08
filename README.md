@@ -36,3 +36,9 @@ pylint.showNotifications": "onWarning",
         "source.organizeImports": "always"
     },
 ```
+## Prometheus config
+* docker run -d --name prometheus -v /c/chasAcademy/Systemutveckling-Python/monitoringApplication/prometheus.yml:/opt/bitnami/prometheus/conf/prometheus.yml bitnami/prometheus:latest
+* For Windows: docker run -d -p 8090:8090 --name prometheus -v "C:\\chasAcademy\\Systemutveckling-Python\\monitoringApplication\\prometheus.yml:/opt/bitnami/prometheus/conf/prometheus.yml" bitnami/prometheus:latest
+* du -hs data/wal/00000000 - Check the size of the WAL file
+* WAL file - Write Ahead Log file
+* Use host.docker.internal instead of localhost - because localhost refers to the container itself.	

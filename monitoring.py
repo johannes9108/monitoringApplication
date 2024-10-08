@@ -12,7 +12,8 @@ class Monitoring:
     Contains the business logic for the monitoring application and CLI functionality
     """
 
-    def __init__(self, logger, utils, fm):
+    def __init__(self, logger, utils, fm, cliCounter):
+        self.cliCounter = cliCounter
         self.utils = utils
         self.fm = fm
         self.logger = logger
@@ -234,6 +235,7 @@ class Monitoring:
             self.displayMenu()
             try:
                 choice = int(input("Enter choice: "))
+                self.cliCounter.inc()
                 if choice == 1:
                     self.startMonitoring()
                 elif choice == 2:

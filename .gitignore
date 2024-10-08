@@ -130,3 +130,5 @@ cython_debug/
 
 # Log files
 *.log
+
+pylintrc
