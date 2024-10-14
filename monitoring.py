@@ -4,6 +4,13 @@
 
 import os, time, threading
 import psutil
+from prometheus_client import Gauge
+
+# Define a Prometheus Counter metric
+# CLI_COMMAND_COUNTER = Counter('cli_command_runs_total', 'Total number of CLI commands executed')
+CPU_Usage_Percent = Gauge("cpu_usage_percent", "Current CPU Usage in Percent")
+Memory_Usage_Percent = Gauge("memory_usage_percent", "Current Memory Usage in Percent")
+Disk_Usage_Percent = Gauge("disk_usage_percent", "Current Disk Usage in Percent")
 
 
 class Monitoring:
@@ -12,8 +19,7 @@ class Monitoring:
     Contains the business logic for the monitoring application and CLI functionality
     """
 
-    def __init__(self, logger, utils, fm, cliCounter):
-        self.cliCounter = cliCounter
+    def __init__(self, logger, utils, fm):
         self.utils = utils
         self.fm = fm
         self.logger = logger
@@ -73,9 +79,12 @@ class Monitoring:
             diskUsage = self.utils.convertBytesToGB(psutil.disk_usage("/").used)
             diskTotal = self.utils.convertBytesToGB(psutil.disk_usage("/").total)
             if self.backgroundThreadRunning:
-                self.checkAlarms(cpuUsagePercent, self.alarms["cpu_alarms"], "CPU")
+                self.checkAlarms(cpuUsagePercent, self.alarms["cpuAlarms"], "CPU")
                 self.checkAlarms(memUsagePercent, self.alarms["memoryAlarms"], "Memory")
                 self.checkAlarms(diskUsagePercent, self.alarms["diskAlarms"], "Disk")
+                CPU_Usage_Percent.set(cpuUsagePercent)
+                Memory_Usage_Percent.set(memUsagePercent)
+                Disk_Usage_Percent.set(diskUsagePercent)
 
             print(
                 f"CPU Usage: {cpuUsagePercent}%",
@@ -235,7 +244,6 @@ class Monitoring:
             self.displayMenu()
             try:
                 choice = int(input("Enter choice: "))
-                self.cliCounter.inc()
                 if choice == 1:
                     self.startMonitoring()
                 elif choice == 2:

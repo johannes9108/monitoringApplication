@@ -2,11 +2,7 @@
 
 from datetime import datetime
 import logging, time, filemanager, utility, monitoring
-from prometheus_client import Counter, start_http_server
-
-# Define a Prometheus Counter metric
-CLI_COMMAND_COUNTER = Counter('cli_command_runs_total', 'Total number of CLI commands executed')
-
+from prometheus_client import start_http_server
 
 class App:
     """Class will handle the set up of monitoring application and run the application"""
@@ -40,11 +36,12 @@ class App:
         # Initialize external modules
         utils = utility.Utility(logger)
         fm = filemanager.FileManager(logger, utils)
-
-        self.monitor = monitoring.Monitoring(logger, utils, fm,CLI_COMMAND_COUNTER)
+    
+        self.monitor = monitoring.Monitoring(logger, utils, fm)
         time.sleep(1)
 
     def main(self):
+        
         """
         Main function to run the monitoring application
         """
@@ -53,6 +50,6 @@ class App:
 
 
 if __name__ == "__main__":
-    start_http_server(8000,addr=0.0.0.0)
+    start_http_server(8000,addr="0.0.0.0")
     app = App()
     app.main()

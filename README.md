@@ -36,9 +36,15 @@ pylint.showNotifications": "onWarning",
         "source.organizeImports": "always"
     },
 ```
-## Prometheus config
+## Prometheus/Grafana config
 * docker run -d --name prometheus -v /c/chasAcademy/Systemutveckling-Python/monitoringApplication/prometheus.yml:/opt/bitnami/prometheus/conf/prometheus.yml bitnami/prometheus:latest
 * For Windows: docker run -d -p 8090:8090 --name prometheus -v "C:\\chasAcademy\\Systemutveckling-Python\\monitoringApplication\\prometheus.yml:/opt/bitnami/prometheus/conf/prometheus.yml" bitnami/prometheus:latest
 * du -hs data/wal/00000000 - Check the size of the WAL file
 * WAL file - Write Ahead Log file
 * Use host.docker.internal instead of localhost - because localhost refers to the container itself.	
+* [Prometheus Client](https://github.com/prometheus/client_python/blob/d7c9cd88c7f50097cd86869974301df7615bc9c0/prometheus_client/metrics.py#L264)
+* http://localhost:9090/api/v1/query?query=up - Check if Prometheus is up
+* http://localhost:8000/metrics
+* https://prometheus.io/download/
+* https://hub.docker.com/r/grafana/grafana
+* 
