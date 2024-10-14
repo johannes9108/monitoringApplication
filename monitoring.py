@@ -2,9 +2,11 @@
     Core Module for the Monitoring Application
     """
 
-import os, time, threading
+import time, threading, logging
 import psutil
 from prometheus_client import Gauge
+import ui
+
 
 # Define a Prometheus Counter metric
 # CLI_COMMAND_COUNTER = Counter('cli_command_runs_total', 'Total number of CLI commands executed')
@@ -35,8 +37,8 @@ class Monitoring:
         Activates the ability to monitor the system
         """
         self.globalMonitoring = True
-        self.utils.output("Monitoring_started", True, True, "\n\n")
-        self.displayEndFrame()
+        self.utils.output("Monitoring_started", console=True, logger=True, level=logging.INFO)
+        ui.UI.displayEndFrame()
 
     def checkAlarms(self, usagePercent, alarmTypeValues, alarmType):
         """
@@ -51,25 +53,16 @@ class Monitoring:
                 if abs(usagePercent - alarm) <= minValue:
                     minValue = abs(usagePercent - alarm)
                     minValueIndex = index
-                    # print(f"CPU Usage alarm: {cpuUsagePercent}%")
         if alarmTriggered:
-            print(
-                f"Warning, Alarm triggered, {alarmType} usage exceeds: {alarmTypeValues[minValueIndex]}%"
-            )
-            self.logger.warning(
-                "Warning_Alarm_triggered_%s_usage_exceeds_%d%%",
-                alarmType,
-                alarmTypeValues[minValueIndex],
-            )
+            self.utils.output(f"Warning, Alarm triggered, {alarmType} usage exceeds: {alarmTypeValues[minValueIndex]}%",
+                              console=True, logger=True,level=logging.WARNING)
 
     def listActiveMonitoring(self, halt=False):
         """
         Displays the current system usage
         """
         if self.globalMonitoring == False:
-            self.logger.info("No_monitoring_is_active")
-            self.logger.warning("No_monitoring_is_active")
-            print("No monitoring is active", end="\n\n")
+            self.utils.output("No monitoring is active", console=True, logger=True, level=logging.INFO)
         else:
             cpuUsagePercent = psutil.cpu_percent()
             memUsagePercent = psutil.virtual_memory().percent
@@ -85,21 +78,12 @@ class Monitoring:
                 CPU_Usage_Percent.set(cpuUsagePercent)
                 Memory_Usage_Percent.set(memUsagePercent)
                 Disk_Usage_Percent.set(diskUsagePercent)
-
-            print(
-                f"CPU Usage: {cpuUsagePercent}%",
+            self.utils.output( f"CPU Usage: {cpuUsagePercent}%",
                 f"Memory Usage: {memUsagePercent}% ({memUsage} GB out of {memTotal} used)",
                 f"Disk Usage: {diskUsagePercent}% ({diskUsage} GB out of {diskTotal} used)",
-                sep="\n",
-                end="\n\n",
-            )
-            self.logger.debug(
-                "CPU_Usage_%d%%_Memory_Usage_%d%%_Disk_Usage_%d%%",
-                cpuUsagePercent,
-                memUsagePercent,
-                diskUsagePercent,
-            )
-        self.displayEndFrame(halt)
+                console=True, logger=True, level=logging.DEBUG)
+
+        ui.UI.displayEndFrame(halt)
 
     def listActiveMonitoringWrapper(self):
         """
@@ -114,63 +98,52 @@ class Monitoring:
         Adds an alarm to the alarms dictionary
         """
         while True:
-            self.displayStartFrame("Create alarm")
-            print("1 CPU Usage")
-            print("2 Memory Usage")
-            print("3 Disk Usage")
-            print("4 Exit", end="\n\n")
-            choice = int(input("Enter choice: "))
+            ui.UI.displayStartFrame("Create alarm")
+            ui.UI.displayMenu(["CPU Usage", "Memory Usage", "Disk Usage", "Exit"])
+            choice = int(ui.UI.input("Enter choice: "))
             if choice == 1:
                 while True:
-                    cpuThreshold = int(input("Enter CPU threshold between 1-100: "))
+                    cpuThreshold = int(ui.UI.input("Enter CPU threshold between 1-100: "))
                     if not self.utils.validThreshold(cpuThreshold):
                         continue
                     else:
                         self.alarms["cpuAlarms"].append(cpuThreshold)
-                        print(f"Alarm for CPU usage set to {cpuThreshold}%")
-                        self.logger.info(
-                            "Alarm_for_CPU_usage_set_to_%d%%", cpuThreshold
-                        )
+                        self.utils.output(f"Alarm for CPU usage set to {cpuThreshold}%",console=True, logger=True, level=logging.INFO)
                         break
             elif choice == 2:
                 while True:
-                    memThreshold = int(input("Enter Memory threshold between 1-100: "))
+                    memThreshold = int(ui.UI.input("Enter Memory threshold between 1-100: "))
                     if not self.utils.validThreshold(memThreshold):
                         continue
                     else:
                         self.alarms["memoryAlarms"].append(memThreshold)
-                        print(f"Alarm for Memory usage set to {memThreshold}%")
-                        self.logger.info(
-                            "Alarm_for_Memory_usage_set_to_%d%%", memThreshold
-                        )
+                        self.utils.output(f"Alarm for Memory usage set to {memThreshold}%",console=True, logger=True, level=logging.INFO)
+
                         break
             elif choice == 3:
                 while True:
-                    diskThreshold = int(input("Enter Disk threshold between 1-100: "))
+                    diskThreshold = int(ui.UI.input("Enter Disk threshold between 1-100: "))
                     if not self.utils.validThreshold(diskThreshold):
                         continue
                     else:
                         self.alarms["diskAlarms"].append(diskThreshold)
-                        print(f"Alarm for Disk usage set to {diskThreshold}%")
-                        self.logger.info(
-                            "Alarm_for_Disk_usage_set_to_%d%%", diskThreshold
-                        )
+                        self.utils.output(f"Alarm for Disk usage set to {diskThreshold}%",console=True, logger=True, level=logging.INFO)
                         break
             elif choice == 4:
-                print("Exit")
+                self.utils.output("Exit",console=True, logger=False)
                 break
             else:
-                print("Invalid choice")
-            self.displayEndFrame()
+                self.utils.output("Invalid choice",console=True, logger=False)
+            ui.UI.displayEndFrame()
         self.fm.persistAlarmData(self.alarms)
 
     def removeAlarm(self):
         """
         Removes a selected alarm from the alarms dictionary
         """
-        self.displayStartFrame("Remove alarm")
+        ui.UI.displayStartFrame("Remove alarm")
         self.displayAlarms(True)
-        removableCandidate = int(input("Enter which alarm to remove: "))
+        removableCandidate = int(ui.UI.input("Enter which alarm to remove: "))
         cpuAlarms = len(self.alarms.get("cpuAlarms"))
         memoryAlarms = len(self.alarms.get("memoryAlarms"))
         diskAlarms = len(self.alarms.get("diskAlarms"))
@@ -194,8 +167,7 @@ class Monitoring:
                     removableCandidate - cpuAlarms - memoryAlarms - 1
                 ]
             )
-        print(f"Alarm {removableCandidate} removed")
-        self.logger.info("Alarm_%d_removed", removableCandidate)
+        self.utils.output(f"Alarm {removableCandidate} removed",console=True, logger=True, level=logging.INFO)
         self.fm.persistAlarmData(self.alarms)
         time.sleep(1)
 
@@ -206,32 +178,21 @@ class Monitoring:
         self.alarms["cpuAlarms"].sort()
         self.alarms["memoryAlarms"].sort()
         self.alarms["diskAlarms"].sort()
-        count = 0
         self.logger.debug("Displaying_alarms")
-        for i in range(len(self.alarms["cpuAlarms"])):
-            count += 1
-            print(f"{count}. CPU Alarm {self.alarms['cpuAlarms'][i]}%")
-        for i in range(len(self.alarms["memoryAlarms"])):
-            count += 1
-            print(f"{count}. Memory Alarm {self.alarms['memoryAlarms'][i]}%")
-        for i in range(len(self.alarms["diskAlarms"])):
-            count += 1
-            print(f"{count}. Disk Alarm {self.alarms['diskAlarms'][i]}%")
-        if not subMenu:
-            input("Press Enter to return to main menu...")
+        ui.UI.displayAlarms(self.alarms,subMenu)
 
     def startMonitoringMode(self):
         """
         Activates monitoring mode
         """
         self.backgroundThreadRunning = True
-        self.displayStartFrame("Monitoring Mode Activated")
-        self.logger.info("Monitoring_Mode_Activated")
+        ui.UI.displayStartFrame("Monitoring Mode Activated")
+        self.utils.output("Monitoring Mode Activated", console=False, logger=True, level=logging.INFO)
         continuousMonitoringThread = threading.Thread(
             target=self.listActiveMonitoringWrapper, args=(), daemon=True
         )
         continuousMonitoringThread.start()
-        input("Press Enter to stop monitoring mode...\n")
+        ui.UI.input("Press Enter to stop monitoring mode...\n")
         self.backgroundThreadRunning = False
         continuousMonitoringThread.join()
 
@@ -241,9 +202,9 @@ class Monitoring:
         """
         self.menuOptions = self.fm.readMenuOptions()
         while True:
-            self.displayMenu()
+            ui.UI.displayMenu()
             try:
-                choice = int(input("Enter choice: "))
+                choice = int(ui.UI.input("Enter choice: "))
                 if choice == 1:
                     self.startMonitoring()
                 elif choice == 2:
@@ -259,34 +220,10 @@ class Monitoring:
                 elif choice == len(self.menuOptions) + 1:
                     break
                 else:
-                    print("Invalid choice")
-                    self.displayEndFrame()
+                    self.utils.output(f"Invalid choice - Integer ${choice} is not a viable option",
+                                      console=True, logger=False, level=logging.ERROR)
+                    ui.UI.displayEndFrame()
             except ValueError:
-                print("Invalid choice")
-                self.displayEndFrame()
+                self.utils.output("Invalid choice - Not an integer", console=True, logger=False, level=logging.ERROR)
+                ui.UI.displayEndFrame()
 
-    def displayMenu(self):
-        """
-        Displays the main menu
-        """
-        self.displayStartFrame("Monitoring Application")
-        for index, option in enumerate(self.menuOptions):
-            print(f"{index+1} {option}")
-        print(f"{len(self.menuOptions)+1} Exit\n")
-        self.displayEndFrame()
-
-    def displayStartFrame(self, title):
-        """
-        Displays the start frame with a title of the CLI
-        """
-        os.system("cls" if os.name == "nt" else "clear")
-        print(f"{title}\n{'-'*len(title)}", end="\n\n")
-
-    def displayEndFrame(self, halt=False):
-        """
-        Displays the end frame with a prompt to continue depending on the halt parameter
-        """
-        time.sleep(1)
-        if halt == True:
-            input("Press Enter to continue...")
-            os.system("cls" if os.name == "nt" else "clear")

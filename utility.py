@@ -2,20 +2,22 @@
 Module that contains utility functions for the monitoring application
 '''
 import math
-
+import ui
+from customlogger import logger as importLogger
 class Utility:
     '''
     Class that contains utility functions for the monitoring application
     '''
-    def __init__(self,logger):
-        self.logger = logger
-        logger.info("Initializing Utility")
-    def convertBytesToGB(self,totalBytes):
+    def __init__(self):
+        pass
+    @staticmethod
+    def convertBytesToGB(totalBytes):
         '''
         Converts bytes to gigabytes
         '''
         return math.ceil(totalBytes/10**9)
-    def validThreshold(self,threshold, minValue=1, maxValue=100):
+    @staticmethod
+    def validThreshold(threshold, minValue=1, maxValue=100):
         '''
         Compares the threshold to the min and max values
         '''
@@ -23,12 +25,15 @@ class Utility:
             print("Invalid threshold", end="\n\n")
             return False
         return True
-    def output(self,message, console, logger,end="\n"):
+    @staticmethod
+    def output(*texts, console, logger,level=20,sep=" ",end="\n"):
         '''
         Prints a simple string message to both/or console and logger
         '''
+        
         if console :
-            print(message,end=end)
+            ui.UI.print(*texts,sep=sep,end=end)
         if logger :
-            message = message.replace(" ","_")
-            self.logger.info(message)
+            for text in texts:
+                message = text.replace(" ","_")
+                importLogger.log(level,message)
