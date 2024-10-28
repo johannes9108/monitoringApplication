@@ -2,13 +2,11 @@
     Core Module for the Monitoring Application
     """
 
-from operator import le
-from re import U, sub
 import time, threading, logging
 import psutil
 from prometheus_client import Gauge
 import ui
-from Alarm import Alarm
+from alarm import Alarm
 # Define a Prometheus Counter metric
 # CLI_COMMAND_COUNTER = Counter('cli_command_runs_total', 'Total number of CLI commands executed')
 CPU_Usage_Percent = Gauge("cpu_usage_percent", "Current CPU Usage in Percent")
@@ -45,6 +43,7 @@ class Monitoring:
         Checks if the current usage exceeds the alarm value
         """
         minValue = 100655
+        minValueIndex = 0
         alarmTriggered = False
         # absolute value of the difference between the current value and the alarm value
         for index, alarm in enumerate(alarmTypeValues):
@@ -110,14 +109,15 @@ class Monitoring:
         self.fm.persistAlarmData(self.alarms,JSON_FILENAME)
     def addNewAlarms(self,choice, alarms):
         if choice in range(1,4):
-            choice = ["CPU","Memory","Disk"].__getitem__(choice-1)
+            choice = ["CPU","Memory","Disk"][choice-1]
             while True:
                 thresHold = int(ui.UI.input(f"Enter {choice} threshold between 1-100: "))
                 if not self.utils.validThreshold(thresHold):
                     continue
                 else:
                     alarms.append(Alarm(thresHold, choice))
-                    self.utils.output(f"Alarm for {choice} usage set to {thresHold}%",console=True, logger=True, level=logging.INFO)
+                    self.utils.output(f"Alarm for {choice} usage set to {thresHold}%",
+                                      console=True, logger=True, level=logging.INFO)
                     break
         else:
             self.utils.output("Invalid choice",console=True, logger=False)
@@ -200,4 +200,3 @@ class Monitoring:
             except ValueError:
                 self.utils.output("Invalid choice - Not an integer", console=True, logger=False, level=logging.ERROR)
                 ui.UI.displayEndFrame()
-

@@ -15,8 +15,6 @@ class App:
         Sets up logger and initializes the external modules.
         These modules are combined into the monitoring application.
         """
-
-        
         utils = utility.Utility()
         fm = filemanager.FileManager()
         # Initialize external modules
@@ -25,7 +23,6 @@ class App:
         time.sleep(1)
 
     def main(self):
-        
         """
         Main function to run the monitoring application
         """

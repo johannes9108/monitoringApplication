@@ -18,6 +18,32 @@
 * Prometheus server is running on port 9090 and the configuration file is located in the root directory.
 * Grafana is running on port 3000 and to ![Grafana Set up](image.png "Grafana Set up")
 ## Configuration
+### Pipenv
+* To install the dependencies, run `pipenv install`
+* Depending on the terminal, the command `pipenv shell` might be needed to activate the virtual environment.
+### Prometheus/Grafana config
+* To run Prometheus a custom configuration file is needed. The configuration file is located in the root directory and is named `prometheus.yml`. The most important setting is to find the correct target for the Prometheus server to scrape. The target is the IP address of the host machine. The configuration file should look like this because the metric endpoint is exposed locally on port 8000:
+```yml
+...
+scrape_configs:
+  - job_name: "cli_app"
+    static_configs:
+      - targets: ["host.docker.internal:8000"]
+...
+```
+* docker run -d -p 8090:8090 --name prometheus -v {absolutePath}/monitoringApplication/prometheus.yml:/opt/bitnami/prometheus/conf/prometheus.yml bitnami/prometheus:latest
+* {absolutePath} - Follow the standard for slashes for the operating system you are using:
+  * Unix/Linus: /c/chasAcademy/Systemutveckling-Python
+  * Windows: C:\\chasAcademy\\Systemutveckling-Python
+* docker run -d -p 3000:3000 --name grafana grafana/grafana
+* du -hs data/wal/00000000 - Check the size of the WAL file
+* WAL file - Write Ahead Log file
+* Use host.docker.internal instead of localhost - because localhost refers to the container itself.	
+* [Prometheus Client](https://github.com/prometheus/client_python/blob/d7c9cd88c7f50097cd86869974301df7615bc9c0/prometheus_client/metrics.py#L264)
+* http://localhost:9090/api/v1/query?query=up - Check if Prometheus is up
+* http://localhost:8000/metrics
+* https://prometheus.io/download/
+* https://hub.docker.com/r/grafana/grafana
 ### Pylint
 * [Pylint docs](https://pylint.readthedocs.io/en/latest/user_guide/messages/convention/invalid-name.html)
 * In settings.json
@@ -45,15 +71,3 @@ pylint.showNotifications": "onWarning",
         "source.organizeImports": "always"
     },
 ```
-### Prometheus/Grafana config
-* docker run -d --name prometheus -v /c/chasAcademy/Systemutveckling-Python/monitoringApplication/prometheus.yml:/opt/bitnami/prometheus/conf/prometheus.yml bitnami/prometheus:latest
-* For Windows: docker run -d -p 8090:8090 --name prometheus -v "C:\\chasAcademy\\Systemutveckling-Python\\monitoringApplication\\prometheus.yml:/opt/bitnami/prometheus/conf/prometheus.yml" bitnami/prometheus:latest
-* du -hs data/wal/00000000 - Check the size of the WAL file
-* WAL file - Write Ahead Log file
-* Use host.docker.internal instead of localhost - because localhost refers to the container itself.	
-* [Prometheus Client](https://github.com/prometheus/client_python/blob/d7c9cd88c7f50097cd86869974301df7615bc9c0/prometheus_client/metrics.py#L264)
-* http://localhost:9090/api/v1/query?query=up - Check if Prometheus is up
-* http://localhost:8000/metrics
-* https://prometheus.io/download/
-* https://hub.docker.com/r/grafana/grafana
-## 

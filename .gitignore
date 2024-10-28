@@ -133,3 +133,4 @@ cython_debug/
 
 pylintrc
 .idea/
+data/alarm*

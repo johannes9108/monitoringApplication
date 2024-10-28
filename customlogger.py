@@ -17,4 +17,3 @@ for handler in logging.root.handlers[:]:
 logger.addHandler(fileHandler)
 logger.info("Initializing_Monitoring_Application")
 logger.debug("Setting_up_logger")
-

@@ -1,9 +1,8 @@
 """Module will handle reading and writing to files"""
 
 import json
-from re import A
 from utility import Utility as utils
-from Alarm import Alarm
+from alarm import Alarm
 
 class FileManager:
     """Class that handles reading and writing to files"""
@@ -28,8 +27,8 @@ class FileManager:
         """
         try:
             with open(f"data/{filename}", "r", encoding="UTF-8") as file:
-                alarms_dict = json.load(file)
-                alarms = [Alarm.deserializer(alarm) for alarm in alarms_dict]
+                alarmsDict = json.load(file)
+                alarms = [Alarm.deserializer(alarm) for alarm in alarmsDict]
                 utils.output("loading previously configured alarms...", console=True, logger=True)
                 return alarms
         except FileNotFoundError:

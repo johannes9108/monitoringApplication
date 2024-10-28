@@ -31,13 +31,9 @@ class Utility:
         '''
         Prints a string message to both/or console and logger
         '''
-        
         if console :
             ui.UI.print(*texts,sep=sep,end=end)
         if logger :
             for text in texts:
                 message = text.replace(" ","_")
                 importLogger.log(level,message)
-     # @staticmethod
-    # def addNewAlarms(choice, alarms) -> list[]:
-    #     pass

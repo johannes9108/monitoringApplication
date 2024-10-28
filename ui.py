@@ -66,15 +66,13 @@ class UI:
         Displays the input prompt
         """
         return input(text)
-        
     @staticmethod
     def print(*texts,sep=" ", end="\n"):
         """
         Displays the text
         """
-        
         if len(texts) == 1:
             print(texts[0],sep=sep,end=end)
-        else: 
+        else:
             for msg in texts:
                 print(msg,sep=sep,end=end)
