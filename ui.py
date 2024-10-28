@@ -55,16 +55,8 @@ class UI:
         Displays the alarms
         """
         UI.displayStartFrame("Alarms")
-        count = 0
-        for i in range(len(alarms["cpuAlarms"])):
-            count += 1
-            print(f"{count}. CPU Alarm {alarms['cpuAlarms'][i]}%")
-        for i in range(len(alarms["memoryAlarms"])):
-            count += 1
-            print(f"{count}. Memory Alarm {alarms['memoryAlarms'][i]}%")
-        for i in range(len(alarms["diskAlarms"])):
-            count += 1
-            print(f"{count}. Disk Alarm {alarms['diskAlarms'][i]}%")
+        for alarm in enumerate(alarms):
+            print(f"{alarm[0]+1}. {alarm[1]}")
         if not subMenu:
             input("Press Enter to return to main menu...")
         UI.displayEndFrame()

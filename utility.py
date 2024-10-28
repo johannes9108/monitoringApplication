@@ -5,6 +5,7 @@ import math
 import ui
 from customlogger import logger as importLogger
 class Utility:
+    LINEBREAK = "--------------\n"
     '''
     Class that contains utility functions for the monitoring application
     '''
@@ -28,7 +29,7 @@ class Utility:
     @staticmethod
     def output(*texts, console, logger,level=20,sep=" ",end="\n"):
         '''
-        Prints a simple string message to both/or console and logger
+        Prints a string message to both/or console and logger
         '''
         
         if console :
@@ -37,3 +38,6 @@ class Utility:
             for text in texts:
                 message = text.replace(" ","_")
                 importLogger.log(level,message)
+     # @staticmethod
+    # def addNewAlarms(choice, alarms) -> list[]:
+    #     pass
